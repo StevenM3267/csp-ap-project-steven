@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Keypress</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script>
+      var a;
+      $(document).keydown(function (event) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
+        if (keycode == 27) {
+          alert("You pressed escape!");
+        }
+        if (keycode == 13) {
+          alert("You pressed enter!");
+        }
+        if (keycode == 65) {
+          //alert("You pressed a.  go left")
+          pacman.left -= 10;
+        }
+        if (keycode == 83) {
+          //alert("You pressed s! go down")
+          pacman.top += 10;
+        }
+        if (keycode == 87) {
+          //alert("You pressed w! go up")
+          pacman.top -= 10;
+        }
+        if (keycode == 68) {
+          //alert("You pressed d! go right")
+          pacman.left += 10;
+        }
+      });
+
+      var createImage = function (src, title, xcoord, ycoord) {
+        var img = new Image();
+        img.src = src;
+        img.alt = title;
+        img.title = title;
+        img.left = xcoord;
+        img.top = ycoord;
+        return img;
+      };
+
+      var a;
+      var pacman = createImage(
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Pacman.svg/542px-Pacman.svg.png",
+        "pacman1",
+        200,
+        400
+      );
+      var pellet = createImage(
+        "https://www.nicepng.com/png/full/550-5501141_pacman-dot-png-royalty-free-library-yellow-circle.png",
+        "pellet",
+        300,
+        25
+      );
+      var pictArray = [];
+      var collision = false;
+      var complete = false;
+      var pacmanLives = 2;
+      var pacmanFinish = 0;
+      var speed = 5;
+      let DISTANCE = 40;
+      let running = false;
+
+      function initialize() {
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+        ctx.drawImage(pacman, pacman.left, pacman.top, 40, 40);
+        ctx.drawImage(pellet, pellet.left, pellet.top, 40, 40);
+        pictArray.push(
+          createImage(
+            "https://www.giantbomb.com/a/uploads/square_small/8/87790/2469741-inky.png",
+            "ghost1",
+            500,
+            100
+          )
+        ); //
+        pictArray.push(
+          createImage(
+            "https://freepngimg.com/thumb/ghost/71499-blue-games-ghosts-pac-man-ghost-free-download-png-hd.png",
+            "ghost2",
+            -100,
+            200
+          )
+        ); //
+        pictArray.push(
+          createImage(
+            "https://pngimg.com/d/pacman_PNG99.png",
+            "ghost3",
+            -300,
+            300
+          )
+        ); //
+        drawBackground();
+      }
+
+      function moveGhost() {
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+        // top red ghost going right to left
+        pictArray[0].left -= speed;
+        ctx.drawImage(
+          pictArray[0],
+          pictArray[0].left,
+          pictArray[0].top,
+          60,
+          30
+        );
+        if (pictArray[0].left < -200) {
+          pictArray[0].left = 500;
+        }
+        // middle blue ghost going left to right
+        pictArray[1].left += speed;
+        ctx.drawImage(
+          pictArray[1],
+          pictArray[1].left,
+          pictArray[1].top,
+          60,
+          30
+        );
+        if (pictArray[1].left > 500) {
+          pictArray[1].left = -200;
+        }
+        // bottom orange ghost going left to right
+        pictArray[2].left += speed;
+        ctx.drawImage(
+          pictArray[2],
+          pictArray[2].left,
+          pictArray[2].top,
+          60,
+          30
+        );
+        if (pictArray[2].left > 500) {
+          pictArray[2].left = -200;
+        }
+      }
+
+      function checkCollision(distance) {
+        if (distance < 10 || distance >= 80) {
+          alert("Invalid distance!!!");
+          DISTANCE = 40;
+          refresh();
+        } else {
+          for (var i = 0; i < pictArray.length; i++) {
+            if (
+              pacman.left + distance > pictArray[i].left &&
+              pacman.left < pictArray[i].left + distance &&
+              pacman.top + distance > pictArray[i].top &&
+              pacman.top < pictArray[i].top + distance
+            ) {
+              collision = true;
+            }
+          }
+        }
+      }
+
+      function checkComplete() {
+        if (
+          pacman.left + 40 > pellet.left &&
+          pacman.left < pellet.left + 40 &&
+          pacman.top + 40 > pellet.top &&
+          pacman.top < pellet.top + 40
+        ) {
+          complete = true;
+          pacmanFinish++;
+          speed++;
+        }
+      }
+
+      function movePellet() {
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+        if (pacmanFinish % 2 == 0) {
+          pellet.left = 300;
+          pellet.top = 25;
+        }
+        if (pacmanFinish % 2 == !0) {
+          ctx.drawImage(pellet, pellet.left, pellet.top, 40, 40);
+          pellet.left = 100;
+          pellet.top = 400;
+        } else {
+          ctx.drawImage(pellet, pellet.left, pellet.top, 40, 40);
+        }
+      }
+
+      function movePacman() {
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+        ctx.fillStyle = "#FFFFFF";
+        ctx.drawImage(pacman, pacman.left, pacman.top, 40, 40);
+        if (collision == true) {
+          pacman.left = 200;
+          pacman.top = 400;
+          pacmanLives--;
+          collision = false;
+        }
+        if (pacmanLives == -1) {
+          ctx.font = "30px Arial";
+          ctx.fillStyle = "#FF0000";
+          ctx.fillText("Oh no! I died!", 30, 30);
+          pacman.left--;
+          pacman.top++;
+          ctx.drawImage(pacman, pacman.left, pacman.top, 40, 40);
+        } else {
+          ctx.drawImage(pacman, pacman.left, pacman.top, 40, 40);
+        }
+      }
+
+      function collisionPacman() {
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+        if (collision == true) {
+          ctx.font = "25px Arial";
+          ctx.fillStyle = "#FF0000";
+          document.getElementById("lives").innerHTML =
+            "Pacman's Lives: " + pacmanLives;
+          Pacman.left++;
+          Pacman.top--;
+          ctx.drawImage(Pacman, Pacman.left, pacman.top, 40, 40);
+        }
+        if (complete == true) {
+          ctx.font = "25px Arial";
+          ctx.fillStyle = "#FF0000";
+          document.getElementById("food").innerHTML =
+            "Frog's Crown's: " + frogFinish;
+          Pacman.left++;
+          Pacman.top--;
+          ctx.drawImage(Pacman, Pacman.left, Pacman.top, 40, 40);
+        } else {
+          ctx.drawImage(Pacman, Pacman.left, Pacman.top, 40, 40);
+        }
+      }
+
+      function drawBackground() {
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+
+        // l = desert
+        if (pacmanFinish <= 2) {
+          ctx.fillStyle = "black";
+          ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+          var c = document.getElementById("myCanvas");
+          // Main road
+          ctx.fillStyle = "black";
+          ctx.fillRect(0, 90, 500, 55);
+          ctx.fillStyle = "black";
+          ctx.fillRect(0, 190, 500, 55);
+          ctx.fillStyle = "black";
+          ctx.fillRect(0, 290, 500, 55);
+        }
+        // finish
+        if (pacmanFinish <= 3 && pacmanFinish > 2) {
+          ctx.fillStyle = "black"; //#00B425
+          ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+          var c = document.getElementById("myCanvas");
+          ctx.font = "30px Arial";
+          ctx.fillStyle = "gold";
+          ctx.fillText("Level Complete", 100, 100);
+          pacman.left--;
+          pacman.top--;
+        }
+      }
+
+      function startAnimation() {
+        running = true;
+        animate();
+      }
+
+      function animate() {
+        a = requestAnimationFrame(animate);
+        drawBackground();
+        moveGhost();
+        movePellet();
+        movePacman();
+        checkCollision(DISTANCE);
+        checkComplete();
+        collisionPacman();
+      }
+
+      function stopAnimation() {
+        cancelAnimationFrame(a);
+      }
+
+      function refresh() {
+        location.reload();
+      }
+
+      function changeDistance() {
+        if (running === false) {
+          alert("Press 'Click to Start!' first!");
+          refresh();
+        } else {
+          let input = prompt("Enter a new distance! ");
+          DISTANCE = parseInt(input);
+        }
+      }
+    </script>
+  </head>
+  <body onload="initialize()">
+    <canvas
+      id="myCanvas"
+      width="500"
+      height="500"
+      style="border: 1px solid #000000; background: #279123"
+    ></canvas>
+    <button type="button" onclick="startAnimation()">Click to start!</button>
+    <button type="button" onclick="stopAnimation()">Click to stop!</button>
+    <button type="button" onclick="refresh()">Click to Refresh!</button>
+    <button type="button" onclick="changeDistance()">
+      Click to Change the Distance!
+    </button>
+    <p>Grab 3 Pellets to win!</p>
+    <p id="lives">Packman's Lives: 3</p>
+  </body>
+</html>
